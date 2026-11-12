@@ -1,1 +1,28 @@
-name: AI Repository Agent on: issues: types: [opened, labeled] pull request target: types: [opened] jobs: run-agent: runs-on: ubuntu-latest permissions: issues: write pull-requests: write contents: read steps: - name: Checkout Repository uses: actions/checkout@v4 - name: Set up Python uses: actions/setup-python@v5 with: python-version: '3.10' - name: Install Dependencies run: pip install requests openai - name: Run AI Agent Script env: GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} OPENAI_API_KEY: {{ secrets.OPENAI_API_KEY }} EVENT_PATH:{{ github.event_path }} run: python .github/scripts/agent.py
+name: AI Repository Agent
+on:
+issues:
+types: [opened, labeled]
+pull_request_target:
+types: [opened]
+jobs:
+run-agent:
+runs-on: ubuntu-latest
+permissions:
+issues: write
+pull-requests: write
+contents: read
+steps:
+- name: Checkout Repository
+uses: actions/checkout@v4
+- name: Set up Python
+uses: actions/setup-python@v5
+with:
+python-version: '3.10'
+- name: Install Dependencies
+run: pip install requests openai
+- name: Run AI Agent Script
+env:
+GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+EVENT_PATH: ${{ github.event_path }}
+run: python .github/scripts/agent.py
