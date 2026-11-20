@@ -8,7 +8,7 @@ After importing this repository into Vercel, add these under **Project Settings 
 
 - `OPENAI_API_KEY`: your OpenAI API key. Keep this only in Vercel's environment variables; never put it in browser code or commit it to GitHub.
 - `APP_ACCESS_PASSWORD`: a long, private password that the chat frontend will ask you for.
-- `ALLOWED_ORIGIN`: the exact origin of the deployed website, such as `https://your-project.vercel.app` (no trailing slash).
+- `ALLOWED_ORIGIN` (optional): an additional exact origin to allow. The endpoint already accepts the current Vercel deployment host and Vercel's stable production domain.
 - `OPENAI_MODEL` (optional): model name. If omitted, the endpoint uses `gpt-6-astra`.
 
 Set the variables for the Production environment. After adding or changing them, create a new deployment so the function receives the updated values.
