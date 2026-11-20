@@ -18,17 +18,21 @@ function send(res, status, body) {
 }
 
 export default async function handler(req, res) {
-  const allowedOrigin = process.env.ALLOWED_ORIGIN;
   const origin = req.headers.origin;
+  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  const protocol = req.headers["x-forwarded-proto"] || "https";
+  const sameSiteOrigin = host ? `${protocol}://${host}` : "";
+  const productionDomain = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "";
+  const configuredOrigin = process.env.ALLOWED_ORIGIN || "";
+  const allowedOrigins = new Set([sameSiteOrigin, productionDomain, configuredOrigin].filter(Boolean));
 
-  if (!allowedOrigin) {
-    return send(res, 503, { error: "Backend is not configured yet." });
-  }
-  if (!origin || origin !== allowedOrigin) {
+  if (!origin || !allowedOrigins.has(origin)) {
     return send(res, 403, { error: "This site is not allowed to use the assistant." });
   }
 
-  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
