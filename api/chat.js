@@ -104,11 +104,23 @@ export default async function handler(req, res) {
 
     return send(res, 200, { reply: response.output_text || "I couldn't create a reply. Please try again." });
   } catch (error) {
-    const status = error?.status === 429 ? 429 : 502;
-    return send(res, status, {
-      error: status === 429
-        ? "The AI service is busy or its usage limit was reached. Try again shortly."
-        : "The AI service could not answer right now. Please try again later."
-    });
+    const providerStatus = Number(error?.status) || 0;
+    const errorCode = typeof error?.code === "string" ? error.code : "unknown";
+    console.error("OpenAI request failed", { status: providerStatus, code: errorCode });
+
+    if (providerStatus === 401) {
+      return send(res, 502, { error: "OpenAI rejected the server API key. Check OPENAI_API_KEY in Vercel Production." });
+    }
+    if (providerStatus === 403) {
+      return send(res, 502, { error: "OpenAI denied this key access to the selected model or project." });
+    }
+    if (providerStatus === 404) {
+      return send(res, 502, { error: "The selected OpenAI model was not found for this API key. Check OPENAI_MODEL." });
+    }
+    if (providerStatus === 429) {
+      return send(res, 429, { error: "The OpenAI API usage limit was reached. Check API billing and limits." });
+    }
+
+    return send(res, 502, { error: `The AI request failed (HTTP ${providerStatus || "unknown"}). Check the latest Vercel function log.` });
   }
 }
