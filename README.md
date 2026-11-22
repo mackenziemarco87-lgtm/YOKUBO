@@ -1,22 +1,27 @@
-# HospitalityOS AI · Operations Copilot
+# YOKUBO
 
-A browser-based starter concept for an AI operations assistant for hotels. It includes a responsive operations dashboard and an interactive demo chat that answers questions about the sample property data shown on screen.
+YOKUBO is being built as a hospitality AI operating system. The long-term product combines YOKUBO-owned agents with a platform where independent creators can build and offer hospitality agents.
 
-## Run it
+## Current foundation
 
-Open `index.html` in a browser. No install or build step is needed.
+The repository is moving from a static prototype toward a Next.js and TypeScript application. The existing HospitalityOS dashboard and Agent Studio demos remain available as browser pages while the application foundation is built.
 
-## What works in this demo
+- Run locally with Node.js 22 or later: `npm install`, then `npm run dev`.
+- The root page currently redirects to the existing dashboard at `/index.html`.
+- The Vercel Function at `/api/chat` keeps the OpenAI key on the server and answers from a sample hotel snapshot.
+- The dashboard uses sample hotel data. It is not connected to a PMS or other live hotel systems.
+- The Agent Studio prototype stores drafts in that browser only. It is not cloud persistence or a creator marketplace.
 
-- Responsive dashboard for a sample hotel, The Meridian Hotel in Barcelona
-- Clickable chat prompts and free-form questions about sample arrivals, occupancy, requests, and VIP preparation
-- Sample attention queue for housekeeping, maintenance, and front desk
-- Responsive layouts for desktop and mobile
+## Not implemented yet
 
-## Important
+There is not yet user sign-in, organization or property membership, tenant-isolated hotel data, persistent conversations, live hotel integrations, publishing, subscriptions, or creator payouts. The app-password check on the current chat endpoint is a prototype gate, not a user account system.
 
-The dashboard and assistant use hard-coded demo data. The chat is a small local rules-based prototype; it does not call an AI model, property management system, or live hotel data source. Before using it operationally, connect an authenticated backend and approved property systems, define staff permissions, and replace the sample data.
+## Build sequence
 
-## Next build step
+1. Establish the application foundation and preserve the working demo.
+2. Add authentication, organizations, properties, roles, and database-enforced tenant isolation.
+3. Build the agent runtime, knowledge, conversations, approved tools, and audit records.
+4. Prove one YOKUBO-owned hospitality agent with a real hotel workflow.
+5. Add creator ownership, versioning, deployment, marketplace sales, and revenue sharing.
 
-Agree the first live workflow (for example, summarizing arrivals from a property management system), then add a backend integration for that system and an AI model. Keep API credentials on the server, never in browser JavaScript.
+Marketplace payments are intentionally later than the secure hotel workspace and first useful agent.
