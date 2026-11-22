@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f5f1">
+    <title>Agent Studio · YOKUBO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="builder.css">
+  </head>
+  <body>
+    <div class="studio-shell">
+      <aside class="studio-sidebar">
+        <a class="brand" href="builder.html"><span class="brand-mark">y</span><span>YOKUBO</span></a>
+        <div class="workspace-label">AGENT WORKSPACE</div>
+        <nav class="studio-nav" aria-label="Main navigation">
+          <a class="active" href="#agents"><span>▦</span> My agents</a>
+          <a href="#templates"><span>✧</span> Templates</a>
+          <a class="coming-soon" href="#billing"><span>◉</span> Usage &amp; billing <small>SOON</small></a>
+        </nav>
+        <div class="sidebar-card">
+          <div class="sidebar-card-icon">✳</div>
+          <b>First example</b>
+          <p>HospitalityOS shows one way an AI assistant can help a team.</p>
+          <a href="index.html">Open hotel demo <span>↗</span></a>
+        </div>
+        <div class="sidebar-footer"><span class="local-dot"></span> Prototype · saved on this device</div>
+      </aside>
+
+      <main class="studio-main">
+        <header class="studio-topbar">
+          <div class="crumb">YOKUBO <span>/</span> <b>Agent Studio</b></div>
+          <button class="primary-button" id="createAgentButton" type="button">＋ Create agent</button>
+        </header>
+
+        <div class="studio-content">
+          <section class="studio-hero">
+            <div>
+              <div class="eyebrow"><span class="local-dot"></span> AGENT STUDIO</div>
+              <h1>Build an agent for your work.</h1>
+              <p>Start from a template, shape its instructions, and save a local prototype.</p>
+            </div>
+          </section>
+
+          <div class="prototype-notice">
+            <span class="notice-icon">i</span>
+            <p><b>Prototype mode.</b> Agents are saved only in this browser. Live AI, user accounts, publishing, and payments are not connected yet.</p>
+          </div>
+
+          <section class="section-block" id="agents">
+            <div class="section-heading">
+              <div><h2>My agents</h2><p id="agentCount">0 agents saved on this device</p></div>
+              <button class="secondary-button" id="emptyCreateButton" type="button">＋ New agent</button>
+            </div>
+            <div class="agent-grid" id="agentList" aria-live="polite"></div>
+          </section>
+
+          <section class="section-block templates-section" id="templates">
+            <div class="section-heading">
+              <div><h2>Start with a template</h2><p>Templates are examples you can customize.</p></div>
+            </div>
+            <div class="template-grid">
+              <article class="template-card">
+                <div class="template-icon hotel">✳</div><div class="template-tag">HOSPITALITY</div>
+                <h3>Hotel operations assistant</h3><p>Help a hotel team review sample arrivals, requests, and daily priorities.</p>
+                <button type="button" data-template="hotel">Use template <span>→</span></button>
+              </article>
+              <article class="template-card">
+                <div class="template-icon support">◌</div><div class="template-tag">CUSTOMER SUPPORT</div>
+                <h3>Support assistant</h3><p>Answer common questions using a clear support policy and escalation rules.</p>
+                <button type="button" data-template="support">Use template <span>→</span></button>
+              </article>
+              <article class="template-card">
+                <div class="template-icon research">⌕</div><div class="template-tag">RESEARCH</div>
+                <h3>Research helper</h3><p>Organize a question, summarize supplied sources, and call out uncertainty.</p>
+                <button type="button" data-template="research">Use template <span>→</span></button>
+              </article>
+              <article class="template-card blank-template">
+                <div class="template-icon blank">＋</div><div class="template-tag">START FRESH</div>
+                <h3>Blank agent</h3><p>Write your own instructions and shape a new agent from scratch.</p>
+                <button type="button" data-template="blank">Start blank <span>→</span></button>
+              </article>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <dialog class="agent-dialog" id="agentDialog">
+      <form id="agentForm">
+        <div class="dialog-heading">
+          <div><div class="eyebrow">AGENT SETUP</div><h2 id="dialogTitle">Create an agent</h2></div>
+          <button class="close-button" type="button" id="closeDialog" aria-label="Close">×</button>
+        </div>
+        <label for="agentName">Agent name</label>
+        <input id="agentName" name="name" maxlength="60" placeholder="For example, Guest support assistant" required>
+        <label for="agentTemplate">Starting template</label>
+        <select id="agentTemplate" name="template">
+          <option value="blank">Blank agent</option>
+          <option value="hotel">Hotel operations assistant</option>
+          <option value="support">Support assistant</option>
+          <option value="research">Research helper</option>
+        </select>
+        <label for="agentInstructions">Instructions</label>
+        <textarea id="agentInstructions" name="instructions" maxlength="1600" rows="6" placeholder="Describe the agent’s role, what it should do, and when it should ask for help." required></textarea>
+        <div class="preview-box">
+          <div class="preview-heading"><b>Local setup preview</b><span>NO AI CALL</span></div>
+          <p>This checks your saved setup only. It does not run a model or connect to external tools.</p>
+          <label for="sampleTask">Example task</label>
+          <input id="sampleTask" placeholder="What would you ask this agent?">
+          <button class="preview-button" id="previewSetupButton" type="button">Preview setup</button>
+          <div class="preview-output" id="previewOutput" aria-live="polite">Your setup preview will appear here.</div>
+        </div>
+        <div class="dialog-actions">
+          <button class="secondary-button" type="button" id="cancelDialog">Cancel</button>
+          <button class="primary-button" type="submit">Save on this device</button>
+        </div>
+      </form>
+    </dialog>
+    <script src="builder.js"></script>
+  </body>
+</html>
