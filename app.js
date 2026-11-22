@@ -422,19 +422,19 @@ function renderImportedActivities(rows) {
   if (metrics.occupancy !== undefined) {
     setNumber(statCards[0], metrics.occupancy, '%');
     statCards[0].querySelector('.stat-foot').textContent = 'Imported from CSV';
-    statCards[0].querySelector('.mini-bars').hidden = true;
+    statCards[0].querySelector('.mini-bars').style.display = 'none';
   }
   if (metrics.arrivals !== undefined) {
     setNumber(statCards[1], metrics.arrivals);
-    statCards[1].querySelector('.stat-progress').hidden = true;
-    statCards[1].querySelector('.progress-caption').hidden = true;
+    statCards[1].querySelector('.stat-progress').style.display = 'none';
+    statCards[1].querySelector('.progress-caption').style.display = 'none';
   }
   if (metrics.rooms_ready !== undefined) {
     const ready = statCards[1].querySelector('.stat-foot');
     ready.textContent = Number(metrics.rooms_ready).toLocaleString('en') + ' rooms ready · CSV';
     if (metrics.arrivals === undefined) markMetricSource(statCards[1], 'DEMO');
-    statCards[1].querySelector('.stat-progress').hidden = true;
-    statCards[1].querySelector('.progress-caption').hidden = true;
+    statCards[1].querySelector('.stat-progress').style.display = 'none';
+    statCards[1].querySelector('.progress-caption').style.display = 'none';
   } else if (metrics.arrivals !== undefined) {
     statCards[1].querySelector('.stat-foot').textContent = 'Rooms-ready figure is demo data';
   }
@@ -444,7 +444,7 @@ function renderImportedActivities(rows) {
   if (openCount !== undefined) {
     setNumber(statCards[2], openCount);
     statCards[2].querySelector('.stat-foot').textContent = metrics.open_requests !== undefined ? 'Imported from CSV' : 'Counted from imported requests';
-    statCards[2].querySelector('.request-tags').hidden = true;
+    statCards[2].querySelector('.request-tags').style.display = 'none';
   }
 
   activityList.replaceChildren(...cards);
