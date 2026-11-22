@@ -250,6 +250,7 @@ function openActivityDetails(button) {
 
 const activityList = document.querySelector('.activity-list');
 const activitySubtitle = document.querySelector('.activity-heading p');
+const activityFilter = document.querySelector('#activityFilter');
 const importCsvButton = document.querySelector('#importActivityCsv');
 const csvFileInput = document.querySelector('#activityCsvFile');
 const templateButton = document.querySelector('#downloadCsvTemplate');
@@ -263,6 +264,33 @@ activityList.addEventListener('click', (event) => {
   const button = event.target.closest('.open-button');
   if (button) openActivityDetails(button);
 });
+
+function applyActivityFilter() {
+  activityList.querySelector('.activity-filter-empty')?.remove();
+  const items = [...activityList.querySelectorAll('.activity-item')];
+  if (!items.length) return;
+  const filter = activityFilter.value;
+  let visibleCount = 0;
+  items.forEach((item) => {
+    const metadata = item.querySelector('.activity-meta')?.textContent?.toLowerCase() || '';
+    const status = (item.dataset.status || metadata).toLowerCase();
+    const priority = (item.dataset.priority || metadata).toLowerCase();
+    const department = (item.dataset.department || metadata).toLowerCase();
+    const matches = filter === 'all'
+      || (filter === 'open' && !/completed|resolved|done|closed/.test(status))
+      || (filter === 'high' && /high|urgent|critical/.test(priority))
+      || (filter !== 'open' && filter !== 'high' && department.includes(filter));
+    item.hidden = !matches;
+    if (matches) visibleCount += 1;
+  });
+  if (!visibleCount) {
+    const empty = document.createElement('p');
+    empty.className = 'activity-filter-empty';
+    empty.textContent = 'No requests match this filter.';
+    activityList.append(empty);
+  }
+}
+activityFilter.addEventListener('change', applyActivityFilter);
 
 function parseCsv(text) {
   const rows = [];
@@ -365,6 +393,9 @@ function renderImportedActivities(rows) {
     const priorityTone = isCompleted ? 'done' : isUpcoming ? 'vip' : isHigh ? 'high' : 'medium';
     const article = document.createElement('article');
     article.className = 'activity-item'; article.dataset.source = 'csv';
+    article.dataset.status = request.status.toLowerCase();
+    article.dataset.priority = request.priority.toLowerCase();
+    article.dataset.department = request.department.toLowerCase();
     const icon = addTextElement(article, 'div', 'activity-icon ' + iconTone, iconText);
     icon.setAttribute('aria-hidden', 'true');
     const copy = document.createElement('div'); copy.className = 'activity-copy';
@@ -417,6 +448,9 @@ function renderImportedActivities(rows) {
   }
 
   activityList.replaceChildren(...cards);
+  activityFilter.value = 'all';
+  if (!cards.length) { const empty = document.createElement('p'); empty.className = 'activity-empty'; empty.textContent = 'No request records were included in this CSV.'; activityList.append(empty); }
+  applyActivityFilter();
   activitySubtitle.textContent = requests.length
     ? 'Imported CSV preview · Local to this browser; no hotel changes'
     : 'CSV metrics preview · No request rows in this file';
@@ -455,6 +489,8 @@ csvFileInput.addEventListener('change', async () => {
 resetSampleButton.addEventListener('click', () => {
   activityList.innerHTML = sampleActivityHtml;
   statsGrid.innerHTML = sampleStatsHtml;
+  activityFilter.value = 'all';
+  applyActivityFilter();
   activitySubtitle.textContent = sampleActivitySubtitle;
   resetSampleButton.hidden = true;
 });
