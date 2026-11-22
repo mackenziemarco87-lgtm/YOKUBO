@@ -256,6 +256,8 @@ const templateButton = document.querySelector('#downloadCsvTemplate');
 const resetSampleButton = document.querySelector('#resetSampleActivity');
 const sampleActivityHtml = activityList.innerHTML;
 const sampleActivitySubtitle = activitySubtitle.textContent;
+const statsGrid = document.querySelector('.stats-grid');
+const sampleStatsHtml = statsGrid.innerHTML;
 
 activityList.addEventListener('click', (event) => {
   const button = event.target.closest('.open-button');
@@ -297,67 +299,145 @@ function addTextElement(parent, tag, className, text) {
   return element;
 }
 
+function markMetricSource(card, source) {
+  const label = card.querySelector('.stat-top > span');
+  if (!label) return;
+  const cleanLabel = label.textContent.replace(/\s·\s(?:CSV|DEMO)$/, '');
+  label.textContent = cleanLabel + ' · ' + source;
+}
+
 function renderImportedActivities(rows) {
-  if (rows.length < 2) throw new Error('The CSV needs a header row and at least one request.');
-  if (rows.length > 101) throw new Error('Import up to 100 requests at a time.');
+  if (rows.length < 2) throw new Error('The CSV needs a header row and at least one data row.');
+  if (rows.length > 101) throw new Error('Import up to 100 records at a time.');
   const headers = rows[0].map((value) => value.trim().toLowerCase().replace(/[\s-]+/g, '_'));
   const sensitiveHeaders = new Set(['guest_name', 'first_name', 'last_name', 'email', 'guest_email', 'phone', 'guest_phone', 'address', 'passport']);
-  if (headers.some((header) => sensitiveHeaders.has(header))) {
-    throw new Error('Remove guest names and contact details, then try again.');
-  }
-  const required = ['title', 'details', 'status', 'priority', 'department'];
-  const missing = required.filter((header) => !headers.includes(header));
-  if (missing.length) throw new Error('Missing CSV columns: ' + missing.join(', ') + '. Download the template for the required format.');
+  if (headers.some((header) => sensitiveHeaders.has(header))) throw new Error('Remove guest names and contact details, then try again.');
   const indexOf = (name) => headers.indexOf(name);
   const read = (values, name) => { const index = indexOf(name); return index < 0 ? '' : (values[index] || '').trim().slice(0, 240); };
-  const importedRows = rows.slice(1).filter((values) => values.some((value) => value.trim()));
-  const cards = importedRows.map((values, rowNumber) => {
+  const dataRows = rows.slice(1).filter((values) => values.some((value) => value.trim()));
+  const metrics = {};
+  const requests = [];
+  const structured = headers.includes('record_type');
+  const requestHeaders = ['title', 'details', 'status', 'priority', 'department'];
+  if (!structured) {
+    const missing = requestHeaders.filter((header) => !headers.includes(header));
+    if (missing.length) throw new Error('Missing CSV columns: ' + missing.join(', ') + '. Download the template for the required format.');
+  }
+  const addRequest = (values, rowNumber) => {
     const title = read(values, 'title');
     const details = read(values, 'details');
     if (!title || !details) throw new Error('Request row ' + (rowNumber + 2) + ' needs both title and details.');
-    const status = read(values, 'status') || 'Open';
-    const priority = read(values, 'priority') || 'Normal';
-    const department = read(values, 'department') || 'General';
-    const room = read(values, 'room');
-    const isCompleted = /complete|resolved|done/i.test(status);
-    const isUpcoming = /upcoming|arrival|scheduled/i.test(status);
-    const isHigh = /high|urgent|critical/i.test(priority);
+    requests.push({
+      title, details,
+      status: read(values, 'status') || 'Open',
+      priority: read(values, 'priority') || 'Normal',
+      department: read(values, 'department') || 'General',
+      room: read(values, 'room'),
+      time: read(values, 'time')
+    });
+  };
+  dataRows.forEach((values, rowIndex) => {
+    if (!structured) { addRequest(values, rowIndex); return; }
+    const type = read(values, 'record_type').toLowerCase();
+    if (type === 'metric') {
+      const name = read(values, 'name').toLowerCase().replace(/[\s-]+/g, '_');
+      const supported = new Set(['occupancy', 'arrivals', 'rooms_ready', 'open_requests']);
+      if (!supported.has(name)) throw new Error('Unsupported metric "' + name + '" on row ' + (rowIndex + 2) + '.');
+      const number = Number(read(values, 'value'));
+      if (!Number.isFinite(number) || number < 0 || (name === 'occupancy' && number > 100) || (name !== 'occupancy' && !Number.isInteger(number))) {
+        throw new Error('Check the value for ' + name + ' on row ' + (rowIndex + 2) + '.');
+      }
+      metrics[name] = number;
+    } else if (type === 'request') {
+      addRequest(values, rowIndex);
+    } else {
+      throw new Error('Row ' + (rowIndex + 2) + ' must have record_type metric or request.');
+    }
+  });
+  if (!Object.keys(metrics).length && !requests.length) throw new Error('No supported metrics or requests were found.');
+
+  const cards = requests.map((request) => {
+    const isCompleted = /complete|resolved|done|closed/i.test(request.status);
+    const isUpcoming = /upcoming|arrival|scheduled/i.test(request.status);
+    const isHigh = /high|urgent|critical/i.test(request.priority);
     const iconTone = isCompleted ? 'green' : isUpcoming ? 'blue' : isHigh ? 'red' : 'amber';
     const iconText = isCompleted ? '✓' : isUpcoming ? '♧' : isHigh ? '!' : '◷';
     const priorityTone = isCompleted ? 'done' : isUpcoming ? 'vip' : isHigh ? 'high' : 'medium';
     const article = document.createElement('article');
-    article.className = 'activity-item';
-    article.dataset.source = 'csv';
+    article.className = 'activity-item'; article.dataset.source = 'csv';
     const icon = addTextElement(article, 'div', 'activity-icon ' + iconTone, iconText);
     icon.setAttribute('aria-hidden', 'true');
     const copy = document.createElement('div'); copy.className = 'activity-copy';
-    addTextElement(copy, 'div', 'activity-title', (room ? 'Room ' + room + ' · ' : '') + title);
-    addTextElement(copy, 'div', 'activity-desc', details);
+    addTextElement(copy, 'div', 'activity-title', (request.room ? 'Room ' + request.room + ' · ' : '') + request.title);
+    addTextElement(copy, 'div', 'activity-desc', request.details + (request.time ? ' · ' + request.time : ''));
     const metadata = document.createElement('div'); metadata.className = 'activity-meta';
-    addTextElement(metadata, 'span', 'priority ' + priorityTone, status.toUpperCase() + ' · ' + priority.toUpperCase());
-    addTextElement(metadata, 'span', '', '·');
-    addTextElement(metadata, 'span', '', department);
+    addTextElement(metadata, 'span', 'priority ' + priorityTone, request.status.toUpperCase() + ' · ' + request.priority.toUpperCase());
+    addTextElement(metadata, 'span', '', '·'); addTextElement(metadata, 'span', '', request.department);
     copy.append(metadata); article.append(copy);
     const openButton = addTextElement(article, 'button', 'open-button', isCompleted ? 'View' : 'Open');
-    openButton.type = 'button';
-    addTextElement(openButton, 'span', '', '↗');
+    openButton.type = 'button'; addTextElement(openButton, 'span', '', '↗');
     return article;
   });
+
+  statsGrid.innerHTML = sampleStatsHtml;
+  const statCards = [...statsGrid.querySelectorAll('.stat-card')];
+  statCards.forEach((card) => markMetricSource(card, 'DEMO'));
+  const setNumber = (card, value, suffix = '') => {
+    const number = card.querySelector('.stat-value');
+    number.replaceChildren(document.createTextNode(Number(value).toLocaleString('en', { maximumFractionDigits: 1 })));
+    if (suffix) { const unit = document.createElement('span'); unit.textContent = suffix; number.append(unit); }
+    markMetricSource(card, 'CSV');
+  };
+  if (metrics.occupancy !== undefined) {
+    setNumber(statCards[0], metrics.occupancy, '%');
+    statCards[0].querySelector('.stat-foot').textContent = 'Imported from CSV';
+    statCards[0].querySelector('.mini-bars').hidden = true;
+  }
+  if (metrics.arrivals !== undefined) {
+    setNumber(statCards[1], metrics.arrivals);
+    statCards[1].querySelector('.stat-progress').hidden = true;
+    statCards[1].querySelector('.progress-caption').hidden = true;
+  }
+  if (metrics.rooms_ready !== undefined) {
+    const ready = statCards[1].querySelector('.stat-foot');
+    ready.textContent = Number(metrics.rooms_ready).toLocaleString('en') + ' rooms ready · CSV';
+    if (metrics.arrivals === undefined) markMetricSource(statCards[1], 'DEMO');
+    statCards[1].querySelector('.stat-progress').hidden = true;
+    statCards[1].querySelector('.progress-caption').hidden = true;
+  } else if (metrics.arrivals !== undefined) {
+    statCards[1].querySelector('.stat-foot').textContent = 'Rooms-ready figure is demo data';
+  }
+  const openCount = metrics.open_requests !== undefined
+    ? metrics.open_requests
+    : requests.length ? requests.filter((request) => !/complete|resolved|done|closed/i.test(request.status)).length : undefined;
+  if (openCount !== undefined) {
+    setNumber(statCards[2], openCount);
+    statCards[2].querySelector('.stat-foot').textContent = metrics.open_requests !== undefined ? 'Imported from CSV' : 'Counted from imported requests';
+    statCards[2].querySelector('.request-tags').hidden = true;
+  }
+
   activityList.replaceChildren(...cards);
-  activitySubtitle.textContent = 'Imported CSV preview · Local to this browser; no hotel changes';
+  activitySubtitle.textContent = requests.length
+    ? 'Imported CSV preview · Local to this browser; no hotel changes'
+    : 'CSV metrics preview · No request rows in this file';
   resetSampleButton.hidden = false;
 }
 
 importCsvButton.addEventListener('click', () => csvFileInput.click());
 templateButton.addEventListener('click', () => {
+  const row = (values) => values.join(',');
   const csv = [
-    'room,title,details,status,priority,department,time',
-    '408,AC not cooling,Guest reported at 9:32 AM,Open,High,Maintenance,09:32',
-    '215,Extra towels,Waiting 18 minutes,In progress,Normal,Housekeeping,09:14',
-    '319,Ready to inspect,Room inspection needed,Open,Normal,Housekeeping,09:18'
+    row(['record_type', 'name', 'value', 'room', 'title', 'details', 'status', 'priority', 'department', 'time']),
+    row(['metric', 'occupancy', '87', '', '', '', '', '', '', '']),
+    row(['metric', 'arrivals', '24', '', '', '', '', '', '', '']),
+    row(['metric', 'rooms_ready', '8', '', '', '', '', '', '', '']),
+    row(['metric', 'open_requests', '3', '', '', '', '', '', '', '']),
+    row(['request', '', '', '408', 'AC not cooling', 'Guest reported', 'Open', 'High', 'Maintenance', '09:32']),
+    row(['request', '', '', '215', 'Extra towels', 'Waiting 18 minutes', 'In progress', 'Normal', 'Housekeeping', '09:14']),
+    row(['request', '', '', '319', 'Ready to inspect', 'Room inspection needed', 'Open', 'Normal', 'Housekeeping', '09:18'])
   ].join('\n');
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  const link = document.createElement('a'); link.href = url; link.download = 'yokubo-requests-template.csv'; link.click();
+  const link = document.createElement('a'); link.href = url; link.download = 'yokubo-dashboard-template.csv'; link.click();
   URL.revokeObjectURL(url);
 });
 csvFileInput.addEventListener('change', async () => {
@@ -374,6 +454,7 @@ csvFileInput.addEventListener('change', async () => {
 });
 resetSampleButton.addEventListener('click', () => {
   activityList.innerHTML = sampleActivityHtml;
+  statsGrid.innerHTML = sampleStatsHtml;
   activitySubtitle.textContent = sampleActivitySubtitle;
   resetSampleButton.hidden = true;
 });
