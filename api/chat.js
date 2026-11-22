@@ -106,7 +106,15 @@ export default async function handler(req, res) {
   } catch (error) {
     const providerStatus = Number(error?.status) || 0;
     const errorCode = typeof error?.code === "string" ? error.code : "unknown";
-    console.error("OpenAI request failed", { status: providerStatus, code: errorCode });
+    const errorMessage = String(error?.message || "unknown").replace(/sk-[A-Za-z0-9_-]+/g, "[REDACTED]").slice(0, 240);
+    const causeCode = typeof error?.cause?.code === "string" ? error.cause.code : "unknown";
+    console.error("OpenAI request failed", {
+      status: providerStatus,
+      code: errorCode,
+      name: typeof error?.name === "string" ? error.name : "unknown",
+      causeCode,
+      message: errorMessage
+    });
 
     if (providerStatus === 401) {
       return send(res, 502, { error: "OpenAI rejected the server API key. Check OPENAI_API_KEY in Vercel Production." });
