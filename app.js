@@ -236,7 +236,7 @@ function openActivityDetails(button) {
   status.textContent = metadata;
   const note = document.createElement('p');
   note.className = 'demo-note';
-  note.textContent = 'Demo only: this is sample information. No real hotel record will be changed.';
+  note.textContent = item.dataset.source === 'csv' ? 'CSV preview only: data stays in this browser and no hotel system is changed.' : 'Demo only: this is sample information. No real hotel record will be changed.';
   const close = document.createElement('button');
   close.type = 'button';
   close.textContent = 'Close';
@@ -248,6 +248,132 @@ function openActivityDetails(button) {
   dialog.showModal();
 }
 
-document.querySelectorAll('.open-button').forEach((button) => {
-  button.addEventListener('click', () => openActivityDetails(button));
+const activityList = document.querySelector('.activity-list');
+const activitySubtitle = document.querySelector('.activity-heading p');
+const importCsvButton = document.querySelector('#importActivityCsv');
+const csvFileInput = document.querySelector('#activityCsvFile');
+const templateButton = document.querySelector('#downloadCsvTemplate');
+const resetSampleButton = document.querySelector('#resetSampleActivity');
+const sampleActivityHtml = activityList.innerHTML;
+const sampleActivitySubtitle = activitySubtitle.textContent;
+
+activityList.addEventListener('click', (event) => {
+  const button = event.target.closest('.open-button');
+  if (button) openActivityDetails(button);
+});
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    if (quoted) {
+      if (char === '"' && text[i + 1] === '"') { field += '"'; i += 1; }
+      else if (char === '"') quoted = false;
+      else field += char;
+    } else if (char === '"' && field.length === 0) {
+      quoted = true;
+    } else if (char === ',') {
+      row.push(field); field = '';
+    } else if (char === '\n' || char === '\r') {
+      if (char === '\r' && text[i + 1] === '\n') i += 1;
+      row.push(field); rows.push(row); row = []; field = '';
+    } else {
+      field += char;
+    }
+  }
+  if (quoted) throw new Error('The CSV has an unfinished quoted value.');
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter((values) => values.some((value) => value.trim()));
+}
+
+function addTextElement(parent, tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  element.textContent = text;
+  parent.append(element);
+  return element;
+}
+
+function renderImportedActivities(rows) {
+  if (rows.length < 2) throw new Error('The CSV needs a header row and at least one request.');
+  if (rows.length > 101) throw new Error('Import up to 100 requests at a time.');
+  const headers = rows[0].map((value) => value.trim().toLowerCase().replace(/[\s-]+/g, '_'));
+  const sensitiveHeaders = new Set(['guest_name', 'first_name', 'last_name', 'email', 'guest_email', 'phone', 'guest_phone', 'address', 'passport']);
+  if (headers.some((header) => sensitiveHeaders.has(header))) {
+    throw new Error('Remove guest names and contact details, then try again.');
+  }
+  const required = ['title', 'details', 'status', 'priority', 'department'];
+  const missing = required.filter((header) => !headers.includes(header));
+  if (missing.length) throw new Error('Missing CSV columns: ' + missing.join(', ') + '. Download the template for the required format.');
+  const indexOf = (name) => headers.indexOf(name);
+  const read = (values, name) => { const index = indexOf(name); return index < 0 ? '' : (values[index] || '').trim().slice(0, 240); };
+  const importedRows = rows.slice(1).filter((values) => values.some((value) => value.trim()));
+  const cards = importedRows.map((values, rowNumber) => {
+    const title = read(values, 'title');
+    const details = read(values, 'details');
+    if (!title || !details) throw new Error('Request row ' + (rowNumber + 2) + ' needs both title and details.');
+    const status = read(values, 'status') || 'Open';
+    const priority = read(values, 'priority') || 'Normal';
+    const department = read(values, 'department') || 'General';
+    const room = read(values, 'room');
+    const isCompleted = /complete|resolved|done/i.test(status);
+    const isUpcoming = /upcoming|arrival|scheduled/i.test(status);
+    const isHigh = /high|urgent|critical/i.test(priority);
+    const iconTone = isCompleted ? 'green' : isUpcoming ? 'blue' : isHigh ? 'red' : 'amber';
+    const iconText = isCompleted ? '✓' : isUpcoming ? '♧' : isHigh ? '!' : '◷';
+    const priorityTone = isCompleted ? 'done' : isUpcoming ? 'vip' : isHigh ? 'high' : 'medium';
+    const article = document.createElement('article');
+    article.className = 'activity-item';
+    article.dataset.source = 'csv';
+    const icon = addTextElement(article, 'div', 'activity-icon ' + iconTone, iconText);
+    icon.setAttribute('aria-hidden', 'true');
+    const copy = document.createElement('div'); copy.className = 'activity-copy';
+    addTextElement(copy, 'div', 'activity-title', (room ? 'Room ' + room + ' · ' : '') + title);
+    addTextElement(copy, 'div', 'activity-desc', details);
+    const metadata = document.createElement('div'); metadata.className = 'activity-meta';
+    addTextElement(metadata, 'span', 'priority ' + priorityTone, status.toUpperCase() + ' · ' + priority.toUpperCase());
+    addTextElement(metadata, 'span', '', '·');
+    addTextElement(metadata, 'span', '', department);
+    copy.append(metadata); article.append(copy);
+    const openButton = addTextElement(article, 'button', 'open-button', isCompleted ? 'View' : 'Open');
+    openButton.type = 'button';
+    addTextElement(openButton, 'span', '', '↗');
+    return article;
+  });
+  activityList.replaceChildren(...cards);
+  activitySubtitle.textContent = 'Imported CSV preview · Local to this browser; no hotel changes';
+  resetSampleButton.hidden = false;
+}
+
+importCsvButton.addEventListener('click', () => csvFileInput.click());
+templateButton.addEventListener('click', () => {
+  const csv = [
+    'room,title,details,status,priority,department,time',
+    '408,AC not cooling,Guest reported at 9:32 AM,Open,High,Maintenance,09:32',
+    '215,Extra towels,Waiting 18 minutes,In progress,Normal,Housekeeping,09:14',
+    '319,Ready to inspect,Room inspection needed,Open,Normal,Housekeeping,09:18'
+  ].join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a'); link.href = url; link.download = 'yokubo-requests-template.csv'; link.click();
+  URL.revokeObjectURL(url);
+});
+csvFileInput.addEventListener('change', async () => {
+  const file = csvFileInput.files?.[0];
+  if (!file) return;
+  try {
+    if (file.size > 1024 * 1024) throw new Error('Choose a CSV smaller than 1 MB.');
+    renderImportedActivities(parseCsv(await file.text()));
+  } catch (error) {
+    activitySubtitle.textContent = 'Import not completed: ' + (error.message || 'check the CSV format.');
+  } finally {
+    csvFileInput.value = '';
+  }
+});
+resetSampleButton.addEventListener('click', () => {
+  activityList.innerHTML = sampleActivityHtml;
+  activitySubtitle.textContent = sampleActivitySubtitle;
+  resetSampleButton.hidden = true;
 });
