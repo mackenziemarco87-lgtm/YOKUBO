@@ -203,3 +203,51 @@ document.querySelectorAll('[data-prompt]').forEach((button) => {
     form.requestSubmit();
   });
 });
+function openActivityDetails(button) {
+  const item = button.closest('.activity-item');
+  if (!item) return;
+
+  const title = item.querySelector('.activity-title')?.textContent?.trim() || 'Hotel request';
+  const description = item.querySelector('.activity-desc')?.textContent?.trim() || 'No additional sample details.';
+  const metadata = item.querySelector('.activity-meta')?.textContent?.replace(/\s+/g, ' ')?.trim() || 'Sample activity';
+  const dialog = document.createElement('dialog');
+  dialog.className = 'activity-dialog';
+
+  const style = document.createElement('style');
+  style.textContent = `
+    .activity-dialog { width: min(440px, calc(100% - 32px)); border: 1px solid #e5e7e1; border-radius: 14px; padding: 24px; color: #303a34; font: 14px 'DM Sans', sans-serif; box-shadow: 0 18px 55px #1d2b2233; }
+    .activity-dialog::backdrop { background: #17251f77; }
+    .activity-dialog .dialog-label { color: #8a7951; font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; }
+    .activity-dialog h2 { margin: 0 0 8px; font: 700 19px Manrope, sans-serif; }
+    .activity-dialog p { color: #6f7972; line-height: 1.6; margin: 8px 0; }
+    .activity-dialog .demo-note { margin-top: 18px; padding: 11px 12px; border-radius: 8px; background: #f7f3e8; color: #766843; font-size: 12px; }
+    .activity-dialog button { display: block; margin: 20px 0 0 auto; border: 0; border-radius: 7px; padding: 10px 16px; background: #315745; color: white; font: 600 12px 'DM Sans', sans-serif; cursor: pointer; }
+  `;
+  document.head.append(style);
+
+  const label = document.createElement('div');
+  label.className = 'dialog-label';
+  label.textContent = 'SAMPLE REQUEST';
+  const heading = document.createElement('h2');
+  heading.textContent = title;
+  const detail = document.createElement('p');
+  detail.textContent = description;
+  const status = document.createElement('p');
+  status.textContent = metadata;
+  const note = document.createElement('p');
+  note.className = 'demo-note';
+  note.textContent = 'Demo only: this is sample information. No real hotel record will be changed.';
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.textContent = 'Close';
+  close.addEventListener('click', () => dialog.close());
+  dialog.append(label, heading, detail, status, note, close);
+  document.body.append(dialog);
+  dialog.addEventListener('close', () => { dialog.remove(); style.remove(); });
+  dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+  dialog.showModal();
+}
+
+document.querySelectorAll('.open-button').forEach((button) => {
+  button.addEventListener('click', () => openActivityDetails(button));
+});
