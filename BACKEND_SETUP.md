@@ -1,23 +1,24 @@
-# HospitalityOS backend setup
+# YOKUBO backend setup
 
-This repository now includes a server-side chat endpoint at `/api/chat`. It is designed for Vercel Functions. GitHub Pages remains the static demo host; it cannot run this server endpoint. The website does not use this backend until its chat is connected to it in the next step.
+## Workspace foundation
 
-## Required Vercel environment variables
+The preview branch includes a Supabase migration for private hotel workspaces:
 
-After importing this repository into Vercel, add these under **Project Settings → Environment Variables**:
+`supabase/migrations/20261123190000_workspace_foundation.sql`
 
-- `OPENAI_API_KEY`: your OpenAI API key. Keep this only in Vercel's environment variables; never put it in browser code or commit it to GitHub.
-- `APP_ACCESS_PASSWORD`: a long, private password that the chat frontend will ask you for.
-- `ALLOWED_ORIGIN` (optional): an additional exact origin to allow. The endpoint already accepts the current Vercel deployment host and Vercel's stable production domain.
-- `OPENAI_MODEL` (optional): model name. If omitted, the endpoint uses `gpt-6-astra`.
+It creates:
 
-Set the variables for the Production environment. After adding or changing them, create a new deployment so the function receives the updated values.
+- `workspaces` and `workspace_members` tables
+- Row Level Security policies so members can only read workspaces they belong to
+- An authenticated `create_workspace` function that creates a workspace and its owner membership together
+- Limited database grants; the browser client cannot insert memberships or change member roles
 
-## What this first backend can do
+To enable the workspace screen, open your Supabase project’s **SQL Editor**, paste the migration file contents into a new query, and run it. The migration is additive; it does not change the hotel demo data. Do not put a database password or Supabase secret/service-role key in the app.
 
-- Accept recent chat messages at `POST /api/chat`
-- Require an app password and allow only the configured site origin
-- Call the OpenAI Responses API using a server-side key
-- Return a response based on the sample hotel snapshot in the function instructions
+Once the migration has run, sign in to the foundation preview and open `/workspace`. The first signed-in user can create a hotel workspace. Membership invitations and property records will be added in later steps.
 
-The first version has no live property-system connection and cannot carry out hotel actions. Connecting the website UI to this endpoint and setting the Vercel environment variables are the next steps.
+## Existing hospitality chat endpoint
+
+The repository also includes a server-side chat endpoint at `/api/chat`. GitHub Pages hosts the static hotel demo and cannot run this server endpoint. The website does not use this backend until its chat is connected to it.
+
+The chat endpoint expects `OPENAI_API_KEY` in Vercel environment variables. Keep that key on the server only. If OpenAI usage limits are reached, the demo can continue using its fixed sample replies.

@@ -1,13 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const signInUrl = (request: NextRequest) => {
+  const url = new URL("/sign-in", request.url);
+  url.searchParams.set("next", "/workspace");
+  return url;
+};
+
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !publishableKey) {
     if (request.nextUrl.pathname.startsWith("/workspace")) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(signInUrl(request));
     }
     return NextResponse.next({ request });
   }
@@ -36,9 +42,7 @@ export async function proxy(request: NextRequest) {
   const claims = data?.claims;
 
   if (request.nextUrl.pathname.startsWith("/workspace") && !claims) {
-    const signInUrl = new URL("/", request.url);
-    signInUrl.searchParams.set("next", "/workspace");
-    return NextResponse.redirect(signInUrl);
+    return NextResponse.redirect(signInUrl(request));
   }
 
   return response;
