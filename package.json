@@ -6,6 +6,8 @@
   "engines": { "node": ">=22" },
   "scripts": { "dev": "next dev", "build": "next build", "start": "next start" },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.114.0",
     "next": "^16.0.0",
     "openai": "^7.55.0",
     "react": "^19.2.0",
