@@ -3,13 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function WorkspacePage() {
   const supabase = await createClient();
-  const { data: { claims } } = await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
 
-  if (!claims) redirect("/");
+  if (!data?.claims) redirect("/");
 
   return (
     <main className="workspace-preview">
-      <LinkBack />
+      <a className="workspace-back" href="/">← Back to YOKUBO</a>
       <p className="eyebrow">YOKUBO WORKSPACE</p>
       <h1>You’re signed in.</h1>
       <p>
@@ -18,8 +18,4 @@ export default async function WorkspacePage() {
       </p>
     </main>
   );
-}
-
-function LinkBack() {
-  return <a className="workspace-back" href="/">← Back to YOKUBO</a>;
 }
