@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+
+type FormMode = "sign-in" | "sign-up" | "reset";
 
 type SignInFormProps = {
   configured: boolean;
 };
 
 export default function SignInForm({ configured }: SignInFormProps) {
-  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
+  const [mode, setMode] = useState<FormMode>("sign-in");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -26,7 +29,13 @@ export default function SignInForm({ configured }: SignInFormProps) {
     try {
       const supabase = createClient();
 
-      if (mode === "sign-up") {
+      if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/callback?next=%2Freset-password`,
+        });
+        if (error) throw error;
+        setMessage("If there’s an account for that email, a password reset link will arrive shortly.");
+      } else if (mode === "sign-up") {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -48,10 +57,15 @@ export default function SignInForm({ configured }: SignInFormProps) {
         return;
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "We couldn't complete that request. Please try again.");
+      setMessage(error instanceof Error ? error.message : "We couldn’t complete that request. Please try again.");
     } finally {
       setPending(false);
     }
+  }
+
+  function switchMode(nextMode: FormMode) {
+    setMessage("");
+    setMode(nextMode);
   }
 
   return (
@@ -67,36 +81,60 @@ export default function SignInForm({ configured }: SignInFormProps) {
         disabled={!configured || pending}
       />
 
-      <label htmlFor="password">Password</label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
-        minLength={8}
-        placeholder="At least 8 characters"
-        required
-        disabled={!configured || pending}
-      />
+      {mode !== "reset" && (
+        <>
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+            minLength={8}
+            placeholder="At least 8 characters"
+            required
+            disabled={!configured || pending}
+          />
+        </>
+      )}
 
       <button className="signin-submit" type="submit" disabled={!configured || pending}>
-        {pending ? "Please wait…" : mode === "sign-in" ? "Sign in" : "Create account"}
+        {pending
+          ? "Please wait…"
+          : mode === "reset"
+            ? "Send reset link"
+            : mode === "sign-up"
+              ? "Create account"
+              : "Sign in"}
       </button>
 
+      {mode === "sign-in" && (
+        <p className="signin-switch">
+          <button type="button" onClick={() => switchMode("reset")} disabled={!configured || pending}>
+            Forgot your password?
+          </button>
+        </p>
+      )}
+
       <p className="signin-switch">
-        {mode === "sign-in" ? "New to YOKUBO?" : "Already have an account?"}{" "}
+        {mode === "sign-up"
+          ? "Already have an account?"
+          : mode === "reset"
+            ? "Remembered your password?"
+            : "New to YOKUBO?"}{" "}
         <button
           type="button"
-          onClick={() => {
-            setMessage("");
-            setMode(mode === "sign-in" ? "sign-up" : "sign-in");
-          }}
+          onClick={() => switchMode(mode === "sign-up" ? "sign-in" : "sign-in")}
         >
-          {mode === "sign-in" ? "Create an account" : "Sign in"}
+          {mode === "sign-up" || mode === "reset" ? "Sign in" : "Create an account"}
         </button>
       </p>
 
       {message && <p className="signin-message" role="status">{message}</p>}
+      {mode === "reset" && (
+        <p className="signin-switch">
+          <Link href="/index.html">Back to the hotel demo</Link>
+        </p>
+      )}
     </form>
   );
 }
