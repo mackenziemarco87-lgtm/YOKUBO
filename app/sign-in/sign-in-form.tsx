@@ -123,9 +123,10 @@ export default function SignInForm({ configured }: SignInFormProps) {
             : "New to YOKUBO?"}{" "}
         <button
           type="button"
-          onClick={() => switchMode(mode === "sign-up" ? "sign-in" : "sign-in")}
+          onClick={() => switchMode(mode === "sign-in" ? "sign-up" : "sign-in")}
+          disabled={pending}
         >
-          {mode === "sign-up" || mode === "reset" ? "Sign in" : "Create an account"}
+          {mode === "sign-in" ? "Create an account" : "Sign in"}
         </button>
       </p>
 
