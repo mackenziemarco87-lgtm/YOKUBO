@@ -17,18 +17,22 @@ export default function ResetPasswordForm({ configured }: { configured: boolean 
     const supabase = createClient();
     let active = true;
 
-    void supabase.auth.getUser().then(({ data, error }) => {
-      if (active) setState(!error && data.user ? "ready" : "invalid");
-    }).catch(() => {
-      if (active) setState("invalid");
-    });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
       if (event === "SIGNED_OUT") setState("invalid");
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+      if (
+        event === "INITIAL_SESSION" ||
+        event === "PASSWORD_RECOVERY" ||
+        event === "SIGNED_IN"
+      ) {
         setState(session ? "ready" : "invalid");
       }
+    });
+
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (active) setState(!error && data.session ? "ready" : "invalid");
+    }).catch(() => {
+      if (active) setState("invalid");
     });
 
     return () => {
