@@ -76,3 +76,48 @@ a { color: inherit; }
   .workspace-content { margin-top: 36px; }
   .workspace-secondary-action { margin-left: 0; }
 }
+
+
+/* Technology palette: midnight navy, slate, and cool cyan accents */
+:root { color-scheme: dark; background: #0b1220; color: #e6edf7; }
+body { background: #0b1220; color: #e6edf7; }
+.signin-page, .workspace-page {
+  background: radial-gradient(ellipse at 78% 12%, #162b43 0, #0b1220 48%, #0b1220 100%);
+}
+.yokubo-brand { color: #e7f0fb; }
+.yokubo-mark { background: linear-gradient(145deg, #17324b, #12657c); }
+.preview-label, .signin-footer { color: #8294ab; }
+.signin-intro h1, .workspace-content h1, .signin-card h2,
+.workspace-create-card h2, .workspace-setup h2 { color: #eaf2fc; }
+.eyebrow { color: #54c6dc; }
+.signin-subtitle, .workspace-lede, .workspace-preview p:not(.eyebrow),
+.signin-card-heading p, .workspace-create-card > p, .workspace-setup p,
+.workspace-setup li { color: #9aabc0; }
+.signin-card, .workspace-preview, .workspace-create-card, .workspace-setup {
+  background: #111c2c; border-color: #293a50; color: #e6edf7;
+  box-shadow: 0 22px 60px #02081755;
+}
+.signin-form label, .workspace-create-form label { color: #c1cee0; }
+.signin-form input, .workspace-create-form input {
+  color: #edf4ff; background: #0b1423; border-color: #30435c;
+}
+.signin-form input::placeholder, .workspace-create-form input::placeholder { color: #71849e; }
+.signin-form input:focus, .workspace-create-form input:focus {
+  border-color: #42bad1; outline-color: #42bad1; box-shadow: 0 0 0 3px #42bad133;
+}
+.signin-form input:disabled { background: #121e30; color: #8294ab; }
+.signin-submit, .workspace-action { color: #f6fbff; background: #087e98; }
+.signin-submit:hover, .workspace-action:hover { background: #096b83; }
+.signin-switch, .signin-footnote { color: #90a1b7; }
+.signin-switch button, .signin-form a, .demo-link, .workspace-back,
+.workspace-secondary-action { color: #63cce0; }
+.signin-footnote { border-color: #27374c; }
+.workspace-topbar { background: #101a29; border-color: #293a50; }
+.workspace-account, .workspace-content p { color: #9aabc0; }
+.workspace-card { background: #142136; border-color: #2a3c54; }
+.workspace-card h2 { color: #e7f0fb; }
+.workspace-card p { color: #9aabc0; }
+.workspace-card-mark { color: #71d4e5; background: #17394b; }
+.workspace-notice { color: #9ce8d7; background: #143b3a; }
+.workspace-error { color: #ffc0bd; background: #482729; }
+.setup-note { color: #f3d48b; background: #3c3422; }
