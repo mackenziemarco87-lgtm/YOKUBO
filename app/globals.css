@@ -138,3 +138,53 @@ body { background: #0b1220; color: #e6edf7; }
 @media (prefers-reduced-motion: reduce) {
   .signin-page, .workspace-page { animation: none; background-position: 50% 50%; }
 }
+
+
+/* Matching rain and soft storm light on the sign-in/workspace pages */
+.signin-page, .workspace-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.signin-page::before, .signin-page::after,
+.workspace-page::before, .workspace-page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.signin-page::before, .workspace-page::before {
+  background-image: repeating-linear-gradient(
+    106deg,
+    transparent 0 34px,
+    #a7e8ff12 35px,
+    transparent 36px 65px
+  );
+  background-size: 140px 180px;
+  animation: yokubo-account-rain 1.4s linear infinite;
+}
+.signin-page::after, .workspace-page::after {
+  background:
+    radial-gradient(ellipse at 78% 8%, #73d9ff22, transparent 38%),
+    radial-gradient(ellipse at 23% 82%, #9d8cff12, transparent 42%);
+  opacity: .3;
+  animation: yokubo-account-storm-light 18s ease-in-out infinite;
+}
+.signin-page > *, .workspace-page > * { position: relative; z-index: 1; }
+@keyframes yokubo-account-rain {
+  from { background-position: 0 -180px; }
+  to { background-position: 0 0; }
+}
+@keyframes yokubo-account-storm-light {
+  0%, 100% { opacity: .18; }
+  42% { opacity: .38; }
+  48% { opacity: .5; }
+  55% { opacity: .24; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .signin-page::before, .signin-page::after,
+  .workspace-page::before, .workspace-page::after {
+    animation: none;
+  }
+}
