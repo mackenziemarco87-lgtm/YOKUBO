@@ -121,3 +121,20 @@ body { background: #0b1220; color: #e6edf7; }
 .workspace-notice { color: #9ce8d7; background: #143b3a; }
 .workspace-error { color: #ffc0bd; background: #482729; }
 .setup-note { color: #f3d48b; background: #3c3422; }
+
+/* Slow ambient lighting; no flashes */
+.signin-page, .workspace-page {
+  background-size: 160% 160%;
+  animation: yokubo-ambient-drift 26s ease-in-out infinite alternate;
+}
+.signin-card, .workspace-preview, .workspace-create-card, .workspace-setup {
+  box-shadow: 0 22px 60px #02081755, 0 0 34px #35bdd00a;
+}
+.yokubo-mark { box-shadow: 0 0 22px #38bad833; }
+@keyframes yokubo-ambient-drift {
+  0% { background-position: 0% 40%; }
+  100% { background-position: 100% 60%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .signin-page, .workspace-page { animation: none; background-position: 50% 50%; }
+}
