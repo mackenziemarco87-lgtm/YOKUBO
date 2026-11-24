@@ -1,11 +1,18 @@
 import Link from "next/link";
 import SignInForm from "./sign-in-form";
 
-export default function SignInPage() {
-  const configured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  );
+type SignInPageProps = {
+  searchParams: Promise<{ auth?: string }>;
+};
+
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+  const [{ auth }, configured] = await Promise.all([
+    searchParams,
+    Promise.resolve(Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_URL &&
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    )),
+  ]);
 
   return (
     <main className="signin-page">
@@ -33,6 +40,16 @@ export default function SignInPage() {
             <h2>Welcome to YOKUBO</h2>
             <p>Sign in or create your workspace account.</p>
           </div>
+          {auth === "confirmation" && (
+            <p className="signin-message" role="alert">
+              We couldn’t verify that email link. It may have expired. Request a fresh confirmation email and try again.
+            </p>
+          )}
+          {auth === "setup" && (
+            <p className="setup-note" role="alert">
+              Supabase sign-in is not configured for this preview.
+            </p>
+          )}
           <SignInForm configured={configured} />
           {!configured && (
             <p className="setup-note" role="status">

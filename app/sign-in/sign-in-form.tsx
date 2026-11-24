@@ -4,11 +4,15 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-type FormMode = "sign-in" | "sign-up" | "reset";
+type FormMode = "sign-in" | "sign-up" | "reset" | "resend";
 
 type SignInFormProps = {
   configured: boolean;
 };
+
+function emailRedirect(next: "/workspace" | "/reset-password") {
+  return `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}`;
+}
 
 export default function SignInForm({ configured }: SignInFormProps) {
   const [mode, setMode] = useState<FormMode>("sign-in");
@@ -31,16 +35,24 @@ export default function SignInForm({ configured }: SignInFormProps) {
 
       if (mode === "reset") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/callback?next=%2Freset-password`,
+          redirectTo: emailRedirect("/reset-password"),
         });
         if (error) throw error;
         setMessage("If there’s an account for that email, a password reset link will arrive shortly.");
+      } else if (mode === "resend") {
+        const { error } = await supabase.auth.resend({
+          type: "signup",
+          email,
+          options: { emailRedirectTo: emailRedirect("/workspace") },
+        });
+        if (error) throw error;
+        setMessage("If this address has an unconfirmed YOKUBO account, a new confirmation link will arrive shortly.");
       } else if (mode === "sign-up") {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=%2Fworkspace`,
+            emailRedirectTo: emailRedirect("/workspace"),
           },
         });
 
@@ -49,7 +61,7 @@ export default function SignInForm({ configured }: SignInFormProps) {
           window.location.assign("/workspace");
           return;
         }
-        setMessage("Check your email to confirm your account, then sign in.");
+        setMessage("Check your email to confirm your account. The link should open your YOKUBO workspace.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -68,6 +80,8 @@ export default function SignInForm({ configured }: SignInFormProps) {
     setMode(nextMode);
   }
 
+  const emailOnly = mode === "reset" || mode === "resend";
+
   return (
     <form className="signin-form" onSubmit={handleSubmit}>
       <label htmlFor="email">Email address</label>
@@ -81,7 +95,7 @@ export default function SignInForm({ configured }: SignInFormProps) {
         disabled={!configured || pending}
       />
 
-      {mode !== "reset" && (
+      {!emailOnly && (
         <>
           <label htmlFor="password">Password</label>
           <input
@@ -102,24 +116,33 @@ export default function SignInForm({ configured }: SignInFormProps) {
           ? "Please wait…"
           : mode === "reset"
             ? "Send reset link"
-            : mode === "sign-up"
-              ? "Create account"
-              : "Sign in"}
+            : mode === "resend"
+              ? "Resend confirmation email"
+              : mode === "sign-up"
+                ? "Create account"
+                : "Sign in"}
       </button>
 
       {mode === "sign-in" && (
-        <p className="signin-switch">
-          <button type="button" onClick={() => switchMode("reset")} disabled={!configured || pending}>
-            Forgot your password?
-          </button>
-        </p>
+        <>
+          <p className="signin-switch">
+            <button type="button" onClick={() => switchMode("reset")} disabled={!configured || pending}>
+              Forgot your password?
+            </button>
+          </p>
+          <p className="signin-switch">
+            <button type="button" onClick={() => switchMode("resend")} disabled={!configured || pending}>
+              Didn’t get a confirmation email?
+            </button>
+          </p>
+        </>
       )}
 
       <p className="signin-switch">
         {mode === "sign-up"
           ? "Already have an account?"
-          : mode === "reset"
-            ? "Remembered your password?"
+          : mode === "reset" || mode === "resend"
+            ? "Return to sign in?"
             : "New to YOKUBO?"}{" "}
         <button
           type="button"
@@ -131,7 +154,7 @@ export default function SignInForm({ configured }: SignInFormProps) {
       </p>
 
       {message && <p className="signin-message" role="status">{message}</p>}
-      {mode === "reset" && (
+      {(mode === "reset" || mode === "resend") && (
         <p className="signin-switch">
           <Link href="/index.html">Back to the hotel demo</Link>
         </p>
