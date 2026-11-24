@@ -11,7 +11,14 @@ type SignInFormProps = {
 };
 
 function emailRedirect(next: "/workspace" | "/reset-password") {
-  return `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `yokubo_auth_next=${encodeURIComponent(next)}; Path=/auth/callback; Max-Age=86400; SameSite=Lax${secure}`;
+  return `${window.location.origin}/auth/callback`;
+}
+
+function clearEmailRedirect() {
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `yokubo_auth_next=; Path=/auth/callback; Max-Age=0; SameSite=Lax${secure}`;
 }
 
 export default function SignInForm({ configured }: SignInFormProps) {
@@ -58,6 +65,7 @@ export default function SignInForm({ configured }: SignInFormProps) {
 
         if (error) throw error;
         if (data.session) {
+          clearEmailRedirect();
           window.location.assign("/workspace");
           return;
         }
@@ -69,6 +77,7 @@ export default function SignInForm({ configured }: SignInFormProps) {
         return;
       }
     } catch (error) {
+      clearEmailRedirect();
       setMessage(error instanceof Error ? error.message : "We couldn’t complete that request. Please try again.");
     } finally {
       setPending(false);
