@@ -20,9 +20,7 @@ function callbackRedirect(request: NextRequest, path: string) {
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
-  const savedNextPath = request.cookies.get("yokubo_auth_next")?.value ?? null;
-  const queryNextPath = request.nextUrl.searchParams.get("next");
-  const nextPath = safeNextPath(savedNextPath ?? queryNextPath);
+  const nextPath = safeNextPath(request.nextUrl.searchParams.get("next"));
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
