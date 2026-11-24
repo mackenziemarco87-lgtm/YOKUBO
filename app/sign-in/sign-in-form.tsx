@@ -11,7 +11,7 @@ type SignInFormProps = {
 };
 
 function emailRedirect(next: "/workspace" | "/reset-password") {
-  return `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}`;
+  return `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
 }
 
 export default function SignInForm({ configured }: SignInFormProps) {
@@ -61,7 +61,7 @@ export default function SignInForm({ configured }: SignInFormProps) {
           window.location.assign("/workspace");
           return;
         }
-        setMessage("Check your email to confirm your account. The link should open your YOKUBO workspace.");
+        setMessage("Check your email to confirm your account, then sign in.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -141,7 +141,7 @@ export default function SignInForm({ configured }: SignInFormProps) {
       <p className="signin-switch">
         {mode === "sign-up"
           ? "Already have an account?"
-          : mode === "reset" || mode === "resend"
+          : emailOnly
             ? "Return to sign in?"
             : "New to YOKUBO?"}{" "}
         <button
@@ -154,7 +154,7 @@ export default function SignInForm({ configured }: SignInFormProps) {
       </p>
 
       {message && <p className="signin-message" role="status">{message}</p>}
-      {(mode === "reset" || mode === "resend") && (
+      {emailOnly && (
         <p className="signin-switch">
           <Link href="/index.html">Back to the hotel demo</Link>
         </p>

@@ -10,28 +10,13 @@ It creates the `workspaces` and `workspace_members` tables, row-level policies s
 
 To enable the workspace screen, run the migration in the Supabase SQL Editor. The migration is additive; it does not change the hotel demo data. Do not put a database password or Supabase secret/service-role key in the app.
 
-## Supabase email templates for the preview
+## Email setup for the preview
 
-This app uses Supabase Auth in a server-side Next.js flow. For links opened from an email client to establish the session in the preview, configure the **Confirm signup** template to use the server confirmation endpoint:
+The preview uses Supabase's built-in confirmation email and the existing `/auth/callback` URL. Keep that URL in **Authentication → URL Configuration → Redirect URLs**. Do not change the email templates for initial testing.
 
-```html
-<h2>Confirm your YOKUBO account</h2>
-<p>Click below to confirm your email and open your YOKUBO workspace.</p>
-<p><a href="{{ .RedirectTo }}&amp;token_hash={{ .TokenHash }}&amp;type=email">Confirm your email</a></p>
-```
+Supabase's built-in email sender is for development and is rate-limited. It is limited to project team email addresses and currently sends up to two emails per hour. If you reach the limit, wait before trying again. Custom SMTP is for sending Auth emails to general users or for higher volume; it is optional for this preview.
 
-For the **Reset Password** template, use the same endpoint with the recovery type:
-
-```html
-<h2>Reset your YOKUBO password</h2>
-<p><a href="{{ .RedirectTo }}&amp;token_hash={{ .TokenHash }}&amp;type=recovery">Set a new password</a></p>
-```
-
-Add this preview URL to **Authentication → URL Configuration → Redirect URLs**:
-
-`https://yokubo-git-codex-stage-1-foundation-mackenziemarco87-lgtm.vercel.app/auth/confirm`
-
-Keep the existing `/auth/callback` redirect as well. Do not paste any password, API secret, or token into the email template.
+Once the email is confirmed, sign in and open `/workspace` to create the first hotel workspace.
 
 ## Existing hospitality chat endpoint
 
