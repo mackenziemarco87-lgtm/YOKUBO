@@ -84,3 +84,50 @@ body, .app-shell, .main-content { background: #0b1220; color: #dce7f5; }
 @media (prefers-reduced-motion: reduce) {
   .main-content { animation: none; background-position: 50% 50%; }
 }
+
+
+/* Subtle live rain and diffuse storm light, behind dashboard content */
+.main-content {
+  position: relative;
+  isolation: isolate;
+}
+.main-content::before,
+.main-content::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.main-content::before {
+  background-image: repeating-linear-gradient(
+    106deg,
+    transparent 0 34px,
+    #a7e8ff12 35px,
+    transparent 36px 65px
+  );
+  background-size: 140px 180px;
+  animation: yokubo-rainfall 1.4s linear infinite;
+}
+.main-content::after {
+  background:
+    radial-gradient(ellipse at 78% 8%, #73d9ff22, transparent 38%),
+    radial-gradient(ellipse at 23% 82%, #9d8cff12, transparent 42%);
+  opacity: .3;
+  animation: yokubo-storm-light 18s ease-in-out infinite;
+}
+.main-content > * { position: relative; z-index: 1; }
+@keyframes yokubo-rainfall {
+  from { background-position: 0 -180px; }
+  to { background-position: 0 0; }
+}
+@keyframes yokubo-storm-light {
+  0%, 100% { opacity: .18; }
+  42% { opacity: .38; }
+  48% { opacity: .5; }
+  55% { opacity: .24; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .main-content::before,
+  .main-content::after { animation: none; }
+}
