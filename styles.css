@@ -63,3 +63,24 @@ body, .app-shell, .main-content { background: #0b1220; color: #dce7f5; }
 .activity-item { border-color: #26364b; }
 .open-button { color: #66cfe0; }
 .view-all { color: #69cfe0; }
+
+/* Slow ambient lighting; no flashing */
+.main-content {
+  background:
+    radial-gradient(ellipse at 78% 6%, #12344955, transparent 38%),
+    radial-gradient(ellipse at 22% 84%, #28254b44, transparent 40%),
+    #0b1220;
+  background-size: 150% 150%;
+  animation: yokubo-ambient-drift 28s ease-in-out infinite alternate;
+}
+.stat-card, .assistant-panel, .activity-panel {
+  box-shadow: 0 12px 32px #02081722, 0 0 24px #35bdd008;
+}
+.brand-mark { box-shadow: 0 0 20px #38bad833; }
+@keyframes yokubo-ambient-drift {
+  0% { background-position: 0% 40%; }
+  100% { background-position: 100% 60%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .main-content { animation: none; background-position: 50% 50%; }
+}
