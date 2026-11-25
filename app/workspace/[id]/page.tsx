@@ -4,8 +4,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { saveHotelProfile } from "./actions";
+import { addRequest, updateRequestStatus } from "./request-actions";
 
-export default async function HotelWorkspace({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ profile?: string }> }) {
+export default async function HotelWorkspace({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ profile?: string; request?: string }> }) {
   const { id } = await params;
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) notFound();
 
@@ -35,6 +36,7 @@ export default async function HotelWorkspace({ params, searchParams }: { params:
   const status = await searchParams;
   const { data: profile, error: profileError } = await supabase.from("hotel_profiles").select("city, room_count").eq("workspace_id", id).maybeSingle();
   const canEdit = ["owner", "admin"].includes(membership.role);
+  const { data: requests, error: requestsError } = await supabase.from("hotel_requests").select("id, title, status, created_at").eq("workspace_id", id).order("created_at", { ascending: false });
 
   return (
     <main className="workspace-page">
@@ -68,6 +70,32 @@ export default async function HotelWorkspace({ params, searchParams }: { params:
               </form>}
             </>
           )}
+        </section>
+        <section className="workspace-create-card">
+          <h2>Hotel requests</h2>
+          {requestsError ? <p>Requests need database setup or could not be loaded.</p> : <>
+            <p>Keep track of guest and team requests for this hotel.</p>
+            {(status.request === "error" || status.request === "invalid") && <p className="workspace-error" role="alert">Couldn’t save the request. Check your entry and try again.</p>}
+            {status.request === "added" && <p className="workspace-notice" role="status">Request added.</p>}
+            {status.request === "updated" && <p className="workspace-notice" role="status">Request updated.</p>}
+            <form action={addRequest} className="workspace-create-form">
+              <input type="hidden" name="workspace_id" value={id} />
+              <label htmlFor="request-title">New request</label>
+              <input id="request-title" name="title" maxLength={200} required placeholder="For example, extra towels for room 215" />
+              <button className="workspace-action" type="submit">Add request</button>
+            </form>
+            <div className="workspace-list">
+              {requests?.length ? requests.map((item) => <div className="workspace-card" key={item.id}>
+                <div><h2>{item.title}</h2><p>{item.status === "completed" ? "Completed" : "Open"}</p></div>
+                <form action={updateRequestStatus} style={{ marginLeft: "auto" }}>
+                  <input type="hidden" name="workspace_id" value={id} />
+                  <input type="hidden" name="request_id" value={item.id} />
+                  <input type="hidden" name="status" value={item.status === "open" ? "completed" : "open"} />
+                  <button className="workspace-action" type="submit">{item.status === "open" ? "Mark completed" : "Reopen"}</button>
+                </form>
+              </div>) : <p>No requests yet. Add one above to get started.</p>}
+            </div>
+          </>}
         </section>
         <section className="workspace-create-card">
           <h2>Explore the hotel demo</h2>
