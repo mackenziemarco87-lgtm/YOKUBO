@@ -127,13 +127,14 @@ export default async function WorkspacePage({ searchParams }: WorkspacePageProps
                   )?.role;
 
                   return (
-                    <article className="workspace-card" key={workspace.id}>
+                    <Link className="workspace-card workspace-card-link" href={`/workspace/${workspace.id}`} key={workspace.id}>
                       <div className="workspace-card-mark" aria-hidden="true">Y</div>
                       <div>
                         <h2>{workspace.name}</h2>
                         <p>Hotel workspace · {role ?? "member"}</p>
                       </div>
-                    </article>
+                    <span className="workspace-card-arrow" aria-hidden="true">→</span>
+                    </Link>
                   );
                 })}
               </div>
