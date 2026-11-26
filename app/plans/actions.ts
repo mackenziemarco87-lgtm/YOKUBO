@@ -14,13 +14,13 @@ export async function startTestCheckout(formData: FormData) {
   const plan = formData.get("plan");
   if (plan !== "pro" && plan !== "premier") redirect("/plans?error=plan");
   const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || !key.startsWith("sk_test_")) redirect("/plans?error=setup");
+  if (!key || !key.startsWith("sk_test_") && !key.startsWith("rk_test_")) redirect("/plans?error=setup");
 
   const supabase = await createClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user?.id || !user.email) redirect("/sign-in");
 
-  const allowedOrigin = "https://yokubo-git-codex-stage-1-foundation-mackenziemarco87-lgtm.vercel.app";
+  const allowedOrigin = "https://yokubo-git-codex-subscription-checkout-mackenziemarco87-lgtm.vercel.app";
   const requestHeaders = await headers();
   if (requestHeaders.get("origin") !== allowedOrigin) redirect("/plans?error=origin");
 
