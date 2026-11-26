@@ -15,7 +15,7 @@ export default async function Plans({ searchParams }: { searchParams: Promise<{ 
       <p className="eyebrow">SANDBOX PREVIEW</p>
       <h1>Choose your plan</h1>
       <p className="workspace-lede">Try a plan free for 30 days. A test card is required. After the trial, the monthly test subscription starts unless cancelled.</p>
-      <p className="workspace-notice">Test checkout only. No real charges. Plans and workspace access are not connected yet.</p>
+      <p className="workspace-notice">Sandbox checkout only. No real charges. Subscription access is not connected yet.</p>
       {state.checkout === "success" && <p className="workspace-notice">Test checkout returned successfully. Subscription access is not yet activated.</p>}
       {state.checkout === "cancelled" && <p className="workspace-notice">Checkout cancelled. You can choose a plan when ready.</p>}
       {state.error && <p className="workspace-error" role="alert">Could not start test checkout. Please check the sandbox setup and try again.</p>}
