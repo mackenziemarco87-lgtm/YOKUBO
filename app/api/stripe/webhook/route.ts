@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     return Response.json({ received: true });
   }
 
+  let stage = "read_subscription";
   try {
     const eventSubscription = event.data.object as Stripe.Subscription;
     // Fetch current Stripe state so delayed events do not restore an older status.
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
       return new Response("Invalid subscription", { status: 400 });
     }
 
+    stage = "save_subscription";
     const admin = createClient(supabaseUrl, serviceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -64,10 +66,14 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     }, { onConflict: "stripe_subscription_id" });
 
-    if (error) throw new Error("Subscription status could not be saved");
+    if (error) {
+      console.error("Sandbox subscription database error", error.code);
+      throw new Error("Subscription status could not be saved");
+    }
     return Response.json({ received: true });
-  } catch {
-    console.error("Sandbox webhook processing failed");
+  } catch (error) {
+    const stripeCode = error instanceof Stripe.errors.StripeError ? error.code : undefined;
+    console.error("Sandbox webhook processing failed", stage, stripeCode ?? "unknown");
     return new Response("Webhook processing failed", { status: 500 });
   }
 }
