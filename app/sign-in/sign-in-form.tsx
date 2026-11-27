@@ -59,14 +59,14 @@ export default function SignInForm({ configured }: SignInFormProps) {
 
         if (error) throw error;
         if (data.session) {
-          window.location.assign("/workspace");
+          window.location.assign("/plans");
           return;
         }
         setMessage("Check your email to confirm your account, then sign in.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        window.location.assign("/workspace");
+        window.location.assign("/plans");
         return;
       }
     } catch (error) {
