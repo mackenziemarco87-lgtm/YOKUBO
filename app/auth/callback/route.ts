@@ -2,9 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 function safeNextPath(value: string | null) {
-  return value === "/reset-password" || value === "/workspace"
+  return value === "/reset-password" || value === "/plans"
     ? value
-    : "/workspace";
+    : "/plans";
 }
 
 function callbackRedirect(request: NextRequest, path: string) {
