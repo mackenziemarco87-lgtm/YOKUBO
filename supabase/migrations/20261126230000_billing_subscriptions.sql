@@ -16,3 +16,6 @@ grant select on public.billing_subscriptions to authenticated;
 create policy "Users can read their own subscriptions"
   on public.billing_subscriptions for select to authenticated
   using (user_id = (select auth.uid()));
+
+-- The server webhook records verified Stripe subscription state.
+grant select, insert, update on public.billing_subscriptions to service_role;
