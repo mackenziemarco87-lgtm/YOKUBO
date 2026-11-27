@@ -16,19 +16,25 @@ export default async function Plans({ searchParams }: { searchParams: Promise<{ 
     <section className="workspace-content">
       <p className="eyebrow">SANDBOX PREVIEW</p>
       <h1>Choose your plan</h1>
-      <p className="workspace-lede">Try a plan free for 30 days. A test card is required. After the trial, the monthly test subscription starts unless cancelled.</p>
+      <p className="workspace-lede">Start with 30 days free. Choose Pro or Premium to decide which monthly plan follows your trial. A test card is required.</p>
       <p className="workspace-notice">Sandbox checkout only. No real charges. Workspace access controls are still being built.</p>
       {state.checkout === "success" && <p className="workspace-notice">Test checkout completed. Stripe is confirming your subscription; refresh this page if it is not shown yet.</p>}
       {state.checkout === "cancelled" && <p className="workspace-notice">Checkout cancelled. You can choose a plan when ready.</p>}
       {state.error && <p className="workspace-error" role="alert">Could not start test checkout. Please check the sandbox setup and try again.</p>}
       <section className="workspace-create-card">
         <h2>Your test subscription</h2>
-        {subscriptionError ? <p>Subscription tracking is not configured yet.</p> : subscriptions?.length ? subscriptions.map((subscription, index) => <p key={index}>{subscription.stripe_price_id === "price_1UgAJMBuFp984TxnNQJI9Jn7" ? "Pro" : "Premier"} · {subscription.status}</p>) : <p>No test subscription recorded yet.</p>}
+        {subscriptionError ? <p>Subscription tracking is not configured yet.</p> : subscriptions?.length ? subscriptions.map((subscription, index) => <p key={index}>{subscription.stripe_price_id === "price_1UgAJMBuFp984TxnNQJI9Jn7" ? "Pro" : "Premium"} · {subscription.status}</p>) : <p>No test subscription recorded yet.</p>}
       </section>
       {hasActivePlan && <p><Link className="workspace-action" href="/workspace">Continue to your workspaces →</Link></p>}
-      <div className="hotel-overview-grid">
+      <section className="workspace-create-card" aria-labelledby="free-trial-title">
+        <h2 id="free-trial-title">30-day Free</h2>
+        <p><strong>€0 for the first 30 days</strong></p>
+        <p>Choose Pro or Premium below to start your trial. Your chosen monthly price applies after the trial unless you cancel.</p>
+        <a className="workspace-action" href="#paid-plans">Choose a plan to start →</a>
+      </section>
+      <div id="paid-plans" className="hotel-overview-grid">
         <section className="workspace-create-card"><h2>YOKUBO Pro</h2><p><strong>€25 / month</strong> after the 30-day trial</p><form action={startTestCheckout}><input type="hidden" name="plan" value="pro" /><button className="workspace-action">Try Pro in sandbox</button></form></section>
-        <section className="workspace-create-card"><h2>YOKUBO Premier</h2><p><strong>€49.99 / month</strong> after the 30-day trial</p><form action={startTestCheckout}><input type="hidden" name="plan" value="premier" /><button className="workspace-action">Try Premier in sandbox</button></form></section>
+        <section className="workspace-create-card"><h2>YOKUBO Premium</h2><p><strong>€49.99 / month</strong> after the 30-day trial</p><form action={startTestCheckout}><input type="hidden" name="plan" value="premier" /><button className="workspace-action">Try Premium in sandbox</button></form></section>
       </div>
       <Link className="workspace-back" href="/workspace">← Back to workspaces</Link>
     </section>
