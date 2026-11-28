@@ -81,6 +81,11 @@ export default async function WorkspacePage({ searchParams }: WorkspacePageProps
             We couldn’t create the workspace. Please try again.
           </p>
         )}
+        {params.error === "limit" && (
+          <p className="workspace-error" role="alert">
+            You have reached your plan’s workspace limit. Your existing workspaces are still available.
+          </p>
+        )}
 
         {databaseSetupNeeded ? (
           <section className="workspace-setup" aria-labelledby="workspace-setup-title">
@@ -173,3 +178,4 @@ export default async function WorkspacePage({ searchParams }: WorkspacePageProps
     </main>
   );
 }
+

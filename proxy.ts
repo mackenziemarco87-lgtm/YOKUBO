@@ -11,6 +11,12 @@ export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
+  // This branch is exclusively for the isolated YOKUBO Test project.
+  // Fail closed rather than accidentally reading or writing the main project.
+  if (url !== "https://czviflglxvhbmmjdphbm.supabase.co") {
+    return new NextResponse("Test preview is not connected to YOKUBO Test.", { status: 503 });
+  }
+
   if (!url || !publishableKey) {
     if (request.nextUrl.pathname.startsWith("/workspace")) {
       return NextResponse.redirect(signInUrl(request));
@@ -53,3 +59,4 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
+

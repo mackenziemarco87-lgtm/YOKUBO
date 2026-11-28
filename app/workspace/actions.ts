@@ -22,6 +22,18 @@ export async function createWorkspace(formData: FormData) {
   });
 
   if (error) {
+    if (error.message === "An active sandbox trial or subscription is required.") {
+      redirect("/plans?error=subscription");
+    }
+    if (error.message === "Your workspace limit has been reached.") {
+      redirect("/workspace?error=limit");
+    }
+    if (error.message === "An active sandbox trial or subscription is required.") {
+      redirect("/plans?error=subscription");
+    }
+    if (error.message === "Your workspace limit has been reached.") {
+      redirect("/workspace?error=limit");
+    }
     if (error.code === "PGRST202" || error.code === "42P01") {
       redirect("/workspace?setup=database");
     }
@@ -30,3 +42,4 @@ export async function createWorkspace(formData: FormData) {
 
   redirect("/workspace?created=1");
 }
+
