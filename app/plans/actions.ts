@@ -20,7 +20,7 @@ export async function startTestCheckout(formData: FormData) {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user?.id || !user.email) redirect("/sign-in");
 
-  const allowedOrigin = "https://yokubo-git-codex-subscription-checkout-mackenziemarco87-lgtm.vercel.app";
+  const allowedOrigin = "https://yokubo-git-codex-workspace-plan-test-mackenziemarco87-lgtm.vercel.app";
   const requestHeaders = await headers();
   if (requestHeaders.get("origin") !== allowedOrigin) redirect("/plans?error=origin");
 
@@ -50,3 +50,4 @@ export async function startTestCheckout(formData: FormData) {
   if (!checkoutUrl) redirect("/plans?error=checkout");
   redirect(checkoutUrl);
 }
+
